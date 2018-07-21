@@ -98,8 +98,7 @@ library(ggplot2)
 #arrumando números dos gráficos
 options(scipen=999)
 
-#definindo o diretorio do arquivo
-setwd("C:/Users/bsi90766/Desktop/udacity")
+#Arquivo armazenado no diretório padrão do RStudio
 
 #importando os dados do arquivo csv
 search_data <- read.csv(file="out.csv", header=FALSE, sep=";", encoding = "Windows-1252")
