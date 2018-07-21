@@ -1,0 +1,337 @@
+---
+title: "Avaliação Técnica Analista de Dados - MaxMilhas"
+author: "Yara Barretto"
+date: "7/18/2018"
+output: github_document
+  #html_document: 
+   # keep_md: TRUE
+---
+
+# Análises propostas:
+
+###Análise 1: Tempos de Resposta das Buscas
+
+1) Qual é a análise:  
+    Analisar o tempo de resposta entre o início e fim da busca e entre fim da busca e recebimento.
+
+2) Motivação da análise:  
+    Verificar se as buscas demoram a trazer resultados.   
+    Identificar padrões de buscas que se mostram mais efetivos, identificar também quais padrões de buscas são menos efetivos.  
+    Identificar pontos onde a busca pode ser melhorada.  
+
+3) Como executar:   
+- Verificar outliers e seu volume, como tempo de respostas negativos ou muito longos.  
+- Criar novo DataFrame com os dados, excluindo os outliers (caso seu volume seja baixo), para obtermos estatísticas descritivas mais corretas e realistas.    
+- Realizar um summary na coluna 'qtd_voos_recebidos', para obtermos resumo simples dos dados, como Min., Max., 1st Qu. Mediana, Média, 3st Qu. e quantidade de NAs(dados não retornados).  
+- Verificar quantidade de 'missing values', caso a quantidade for muito alta, procurar identificar porque o dado não foi armazenado. 
+- Plotar gráficos para verificar correlações entre as variáveis disponíveis para análise e o tempo de resposta entre o início e o fim da busca e entre o fim da busca e o recebimento, exemplos:   
+      - Tempo de resposta x Qtd de voos recebidos
+      - Tempo de resposta x Tipo de Voo
+      - Tempo de resposta x Número de passageiros
+      - Tempo de resposta x Dias da semana
+      - Tempo de resposta x Dias da semana + Horário
+      - Tempo de resposta x Usuário com id identificado
+      - Tempo de resposta x Usuário com id não identificado
+- Verificar quais variáveis afetam mais o tempo de resposta da busca.  
+- Aprofundar a análise em alguns pontos mais relevantes.  
+- Buscar e propor soluções para a melhoria do tempo de resposta.  
+- Propor novos dados a serem guardados nas buscas para que possa auxiliar em análises futuras.   
+    
+###Análise 2: Quantidade de Voos Retornados nas Buscas
+1) Qual é a análise:  
+    Analisar a quantidade de voos que são retornados nas buscas mais realizadas, analisar também se há padrão de buscas que retornam poucos resultado.
+
+2) Motivação da análise:  
+    Verificar se as buscas mais realizadas trazem quantidade considerada como ideal para o cliente que está realizando a pesquisa.   
+    Identificar padrões de buscas que retornam mais resultados e padrões de buscas que retornam menos resultados.
+
+3) Como executar:  
+- Verificar outliers e seu volume, como volume de voos retornados negativos ou > 400.
+- Criar novo DataFrame com os dados, excluindo os outliers (caso seu volume seja baixo), para obtermos estatísticas descritivas mais corretas e realistas.
+- Realizar um summary na coluna 'qtd_voos_recebidos', para obtermos resumo simples dos dados, como Min., Max., 1st Qu. Mediana, Média, 3st Qu. e quantidade de NAs(dados não retornados).
+- Verificar quantidade de 'missing values', caso a quantidade for muito alta, verificar porque o dado não está sendo armazenado. 
+- Plotar gráficos para verificar correlação entre as variáveis disponíveis para análise e a quantidade de voos recebidos, exemplos: 
+      - Qtd de Voos Recebidos x Tipo de Voo
+      - Qtd de Voos Recebidos x Classe
+      - Qtd de Voos Recebidos x Direção
+      - Qtd de Voos Recebidos x Número de passageiros
+      - Qtd de Voos Recebidos x Dias da semana
+      - Qtd de Voos Recebidos x Dias da semana + Horário
+      - Qtd de Voos Recebidos x Usuário com id identificado
+      - Qtd de Voos Recebidos x Usuário com id não identificado
+      - Qtd de Voos Recebidos x Tempo de resposta 
+- Verificar quais variáveis mostram afetar o número de voos recebidos.
+- Aprofundar a análise nos pontos relevantes.
+- Buscar e propor soluções para retornar mais voos onde a quantidade é considerada pequena. Uma solução que pode ser buscada é a adição de novos fornecesores de voos.  
+- Dentro dessa análise, pode-se verificar as quantidade de melhores preços na MaxMilhas, verificando se tem ou não relação com o número de voos retornados.
+- Propor novos dados a serem guardados nas buscas para que possa auxiliar em análises futuras. 
+    
+###Análise 3: Análise de Perfil do Buscador
+1) Qual é a análise:  
+    Usar os dados para encontrar um perfil dominante de buscador, e também perfis específicos. Exemplo de Perfil: 'Voos nacionais, que saem de SP, com duração de 3 a 7 dias, 1 adulto de classe econômica com usuário não identificado'.  
+
+2) Motivação da análise:  
+    Priorizar correções e demandas das buscas relacionadas aos Perfis de busca dominantes.
+    Criação de Campanhas para Perfis específicos, com a possibilidade de análise clara dos resultados. 
+
+3) Como executar:  
+- Verificar quais dados podem ser usados para montagem do perfil.  
+- Transformar dados que possíveis de serem transformados em fator, para facilitar a visualização dos dados no R.
+- Analisar com summary as variáveis escolhidas e plotar alguns resultados para que possam ser visualizados de forma mais clara.
+- Montagem do Perfil com os resultados análisados no passo anterior.
+- Montagem de Perfil diferente do dominante geral.
+- Propor novos dados a serem guardados nas buscas para que possa auxiliar em análises futuras.  
+
+
+##A análise escolhida para ser realizada é a Análise 3
+
+Preparando os dados para serem analisados:  
+
+```{r dataprep, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#importando bibliotecas
+library(readr)
+library(hexbin)
+library(plotly)
+library(ggplot2)
+
+#arrumando números dos gráficos
+options(scipen=999)
+
+#definindo o diretorio do arquivo
+setwd("C:/Users/bsi90766/Desktop/udacity")
+
+#importando os dados do arquivo csv
+search_data <- read.csv(file="out.csv", header=FALSE, sep=";", encoding = "Windows-1252")
+
+#transformando em data frame
+search_data=data.frame(search_data)
+
+#inserindo nome das colunas
+names(search_data)=c("id","idusers", "idsearch", "companhia_aerea", "tipo_de_voo", "aeroporto_ida", "aeroporto_volta", "data_ida", "data_volta","dias_entre_a_viagem", "qtd_adultos", "qtd_criancas", "qtd_bebes", "pais_ida","pais_volta", "voo_internacional", "direcao", "classe", "data_busca", "data_inicio_buscador", "data_fim_buscador", "data_recebimento_busca", "diff_segundos_entre_inicio_e_fim_da_busca", "diff_segundos_entre_fim_da_busca_e_recebimento", "qtd_voos", "qtd_voos_recebidos", "qtd_melhores_precos_nas_cias", "qtd_melhores_precos_na_mm", "mais_barato_na_mm_ida", "mais_barato_na_mm_volta", "nome_aeroporto_ida", "codinome_aeroporto_ida", "combinacao_aeroporto_ida", "grupo_aeroporto_ida", "nome_aeroporto_volta", "codinome_aeroporto_volta", "combinacao_aeroporto_volta", "grupo_aeroporto_volta" )
+
+#conferindo nome das colunas
+names(search_data)
+
+#conferindo tipo dos dados
+str(search_data)
+
+#transformando alguns dados em fator
+search_data$companhia_aerea=as.factor(search_data$companhia_aerea)
+search_data$tipo_de_voo=as.factor(search_data$tipo_de_voo)
+search_data$aeroporto_ida=as.factor(search_data$aeroporto_ida)
+search_data$aeroporto_volta=as.factor(search_data$aeroporto_volta)
+search_data$qtd_adultos=as.factor(search_data$qtd_adultos)
+search_data$qtd_criancas=as.factor(search_data$qtd_criancas)
+search_data$qtd_bebes=as.factor(search_data$qtd_bebes)
+search_data$pais_ida=as.factor(search_data$pais_ida)
+search_data$pais_volta=as.factor(search_data$pais_volta)
+search_data$voo_internacional=as.factor(search_data$voo_internacional)
+search_data$direcao=as.factor(search_data$direcao)
+search_data$classe=as.factor(search_data$classe)
+search_data$mais_barato_na_mm_ida=as.factor(search_data$mais_barato_na_mm_ida)
+search_data$mais_barato_na_mm_volta=as.factor(search_data$mais_barato_na_mm_volta)
+search_data$nome_aeroporto_ida=as.factor(search_data$nome_aeroporto_ida)
+search_data$nome_aeroporto_volta=as.factor(search_data$nome_aeroporto_volta)
+search_data$codinome_aeroporto_ida=as.factor(search_data$codinome_aeroporto_ida)
+search_data$codinome_aeroporto_volta=as.factor(search_data$codinome_aeroporto_volta)
+search_data$combinacao_aeroporto_ida=as.factor(search_data$combinacao_aeroporto_ida)
+search_data$combinacao_aeroporto_volta=as.factor(search_data$combinacao_aeroporto_volta)
+search_data$grupo_aeroporto_ida=as.factor(search_data$grupo_aeroporto_ida)
+search_data$grupo_aeroporto_volta=as.factor(search_data$grupo_aeroporto_volta)
+
+#descobrindo numeros a serem analisados
+summary(search_data)
+```
+
+###Analisando Variáveis
+#####Usuários Identificados
+Apenas 12% dos usuários que realizam buscam são identificados:   
+```{r table2, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
+tabl <- "
+| Buscas com Idusers | Buscas sem Idusers |
+| ------------------ | ------------------ |
+| *12%*              | *88%*              |
+"
+cat(tabl) # output the table in a format good for HTML/PDF/docx conversion
+```
+
+####Companhias Aéreas
+As companhias aéreas Azul, Gol e Tam retornam volumes semelhantes, já a Avianca retorna menos resultados:
+```{r ciasaeras, echo=FALSE}
+cias <- table(search_data$companhia_aerea)
+barplot(cias, main = "Companhias Aéreas", col="blue")
+```
+
+####Tipos de Voo
+Nos tipos de Voos buscados, Ida e Volta apresenta volume 6% maior:
+```{r tipo, echo=FALSE}
+tipo <- table(search_data$tipo_de_voo)
+barplot(tipo, main = "Tipos de Voo", col="blue")
+```
+
+####Dias Entre Viagens
+A média de dias entre viagens é 5, porém viagens muito compridas puxam a média para cima, a mediana nos apresenta um resultado mais relista, no caso a mediana é 1 e 75% das viagens se concentram em até 6 dias.
+```{r dias, echo=FALSE}
+summary(search_data$dias_entre_a_viagem)
+hist(search_data$dias_entre_a_viagem,
+     main="Histograma de Dias Entre Viagens", 
+     xlab="Dias",
+     ylab=" ",
+     col="blue",
+     xlim=c(0,20),
+     las=1, 
+     breaks=1000000)
+```
+
+####Quantidade de Adultos
+82% dos clientes buscam passagens para apenas uma pessoa, 15% para duas pessoas e apenas 3% para 3 pessoas ou mais.  
+```{r qtdadult, echo=FALSE}
+passageiros <- table(search_data$qtd_adultos)
+barplot(passageiros, main = "Quantidade de Passageiros", col="blue")
+```
+
+####Quantidade de Crianças e Bebês
+Apenas 6% dos clientes buscam passagens para crianças, sendo que 4% delas buscam passagem para apenas uma criança.
+Apenas 2% dos clientes buscam passagens incluindo bebês.
+Podemos ver nos histogramas abaixo que a maioria pesquisa passagem para apenas uma criança ou bebê.  
+```{r qtdcb, echo=FALSE}
+search_data$qtd_criancas=as.numeric(search_data$qtd_criancas)
+search_data$qtd_bebes=as.numeric(search_data$qtd_bebes)
+hist(search_data$qtd_criancas,
+     main="Histograma da Quantidade de Crianças", 
+     xlab="Crianças",
+     ylab=" ",
+     col="blue",
+     las=1, 
+     breaks=20)
+hist(search_data$qtd_bebes,
+     main="Histograma da Quantidade de Bebês", 
+     xlab="Bebês",
+     ylab=" ",
+     col="blue",
+     las=1, 
+     breaks=20)
+```
+
+####Voo Internacional x Voo Nacional
+89% dos clientes buscam voos nacionais, 11% buscam voos internacionais.
+```{r vooint, echo=FALSE}
+vooint <- table(search_data$voo_internacional)
+barplot(vooint, main = "Voos Nacionais x Voos Internacionais", col="blue")
+```
+
+####Direção dos Voos
+89% dos clientes buscam voos nacionais, os outros 11% dividem em 9% saindo do Brasil e 2% voltando para o Brasil.
+```{r dir, echo=FALSE}
+direcao <- table(search_data$direcao)
+barplot(direcao, main = "Direção dos Voos", col="blue")
+```
+
+####Classe
+99,7% dos clientes buscam voos de classe econômica.
+```{r classe, echo=FALSE}
+classe <- table(search_data$classe)
+barplot(classe, main = "Classe dos Voos Buscados", col="blue", font.axis = 1, ylim=c(0, 12000000))
+```
+
+
+###Perfil Encontrado
+Podemos dizer que o Perfil dominante do buscador é:  
+Usuários não identificados buscando por passagens de ida e volta nacionais para apenas uma pessoa adulta com duração de 1 dia e para viajar de classe econômica.
+
+###Perfil 2 - Clientes que buscam passagens internacionais
+Podemos criar um novo Data Frame contendo somente as buscas internacionais e realizar a mesma análise.
+```{r internacional, echo=FALSE}
+internacional= search_data[ which(search_data$voo_internacional=="SIM"), ]
+```
+
+#####Usuários Identificados
+Apenas 12% dos usuários que realizam buscam são identificados, mesmo resultado apresentado no perfil dominante geral:   
+```{r table3, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
+tabl <- "
+| Buscas com Idusers | Buscas sem Idusers |
+| ------------------ | ------------------ |
+| *12%*              | *88%*              |
+"
+cat(tabl) # output the table in a format good for HTML/PDF/docx conversion
+```
+
+####Companhias Aéreas
+As companhias aéreas Tam, Gol e Azul, retornam volumes semelhantes, já a Avianca retorna menos resultados:
+```{r ciasaerasi, echo=FALSE}
+ciasi <- table(internacional$companhia_aerea)
+barplot(ciasi, main = "Companhias Aéreas", col="blue")
+```
+
+####Tipos de Voo
+Nos tipos de Voos buscados para viagens internacionais, Ida e Volta apresenta volume de 62%:
+```{r tipoi, echo=FALSE}
+tipoi <- table(internacional$tipo_de_voo)
+barplot(tipoi, main = "Tipos de Voo", col="blue")
+```
+
+####Dias Entre Viagens
+A média de dias entre viagens internacionais é 11, porém viagens muito compridas puxam a média para cima, a mediana nos apresenta um resultado mais relista, no caso a mediana é 5 e 75% das viagens se concentram em até 11 dias. Temos muitos 0 na base, é um ponto que deve ser verificado.
+```{r diasi, echo=FALSE}
+summary(internacional$dias_entre_a_viagem)
+hist(internacional$dias_entre_a_viagem,
+     main="Histograma de Dias Entre Viagens Internacionais", 
+     xlab="Dias",
+     ylab=" ",
+     col="blue",
+     xlim=c(0,20),
+     las=1, 
+     breaks=500)
+```
+
+####Quantidade de Adultos
+77% dos clientes que buscam passagens internacionais buscam para apenas uma pessoa, 19% para duas pessoas e apenas 3% para 3 pessoas ou mais.  
+```{r qtdadulti, echo=FALSE}
+passageirosi <- table(internacional$qtd_adultos)
+barplot(passageirosi, main = "Quantidade de Passageiros Internacionais", col="blue")
+```
+
+####Quantidade de Crianças e Bebês
+Apenas 5% dos clientes buscam passagens para crianças, sendo que 4% delas buscam passagem para apenas uma criança.
+Apenas 1% dos clientes buscam passagens incluindo bebês.
+Podemos ver nos histogramas abaixo que a maioria pesquisa passagem para apenas uma criança ou bebê.  
+```{r qtdcbi, echo=FALSE}
+internacional$qtd_criancas=as.numeric(internacional$qtd_criancas)
+internacional$qtd_bebes=as.numeric(internacional$qtd_bebes)
+hist(internacional$qtd_criancas,
+     main="Histograma da Quantidade de Crianças - Voo Internacional", 
+     xlab="Crianças",
+     ylab=" ",
+     col="blue",
+     las=1, 
+     breaks=20)
+hist(internacional$qtd_bebes,
+     main="Histograma da Quantidade de Bebês - Voo Internacional", 
+     xlab="Bebês",
+     ylab=" ",
+     col="blue",
+     las=1, 
+     breaks=20)
+```
+
+####Direção dos Voos
+79% dos Clientes buscam Voos internacionais partindo do Brasil, 18% partindo de outros países para o Brasil e 3% bucam voos com partidas e destinos internacionais.  
+```{r diri, echo=FALSE}
+direcaoi <- table(internacional$direcao)
+barplot(direcaoi, main = "Direção dos Voos Internacionais", col="blue")
+```
+
+####Classe
+97,3% dos clientes buscam voos de classe econômica.
+```{r classei, echo=FALSE}
+classei <- table(internacional$classe)
+barplot(classei, main = "Classe dos Voos Buscados", col="blue", font.axis = 1, ylim=c(0, 12000000))
+```
+
+
+###Perfil Encontrado
+Podemos dizer que o Perfil dominante do buscador de passagens internacional é:  
+Usuários não identificados buscando por passagens de ida e volta para apenas uma pessoa adulta com duração de média de 11 dias e para viajar de classe econômica.
+
+
